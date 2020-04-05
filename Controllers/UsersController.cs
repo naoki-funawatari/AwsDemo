@@ -10,7 +10,7 @@ using System.Web.Http;
 
 namespace AwsDemo.Controllers
 {
-    public class UserController : ApiController
+    public class UsersController : ApiController
     {
         // POST: api/User
         [Authorize]
