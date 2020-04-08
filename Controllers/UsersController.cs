@@ -66,7 +66,7 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var loginId = json["loginId"].ToString();
+                var id = json["id"].ToString();
                 var password = json["password"].ToString();
                 var name = json["name"].ToString();
                 if (string.IsNullOrWhiteSpace(name))
@@ -87,10 +87,10 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "INSERT INTO users VALUES (@login_id, @password, @name, @email);";
+                    var sql = "INSERT INTO users VALUES (@id, @password, @name, @email);";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
-                    cmd.Parameters.Add("@login_id", SqlDbType.Char, 7).Value = loginId;
+                    cmd.Parameters.Add("@id", SqlDbType.Char, 7).Value = id;
                     cmd.Parameters.Add("@password", SqlDbType.VarChar, 100).Value = password;
                     cmd.Parameters.Add("@name", SqlDbType.NVarChar, 50).Value = (object)name ?? DBNull.Value;
                     cmd.Parameters.Add("@email", SqlDbType.VarChar, 100).Value = (object)email ?? DBNull.Value;
