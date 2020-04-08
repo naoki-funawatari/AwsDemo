@@ -12,6 +12,7 @@ namespace AwsDemo.Controllers
     public class ResourcesController : ApiController
     {
         // GET: api/Resources
+        [Authorize]
         public IEnumerable<JObject> Get()
         {
             var resouces = new List<JObject>();

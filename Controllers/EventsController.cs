@@ -12,6 +12,7 @@ namespace AwsDemo.Controllers
     public class EventsController : ApiController
     {
         // GET: api/Events
+        [Authorize]
         public IEnumerable<JObject> Get()
         {
             var events = new List<JObject>();
