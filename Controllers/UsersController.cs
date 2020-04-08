@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -12,40 +13,40 @@ namespace AwsDemo.Controllers
 {
     public class UsersController : ApiController
     {
-        // POST: api/User
-        [Authorize]
-        public JObject Post([FromBody]JObject json)
-        {
-            var id = json["id"].ToString();
-            var password = json["password"].ToString();
+        //// POST: api/User
+        //[Authorize]
+        //public JObject Post([FromBody]JObject json)
+        //{
+        //    var id = json["id"].ToString();
+        //    var password = json["password"].ToString();
 
-            var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
-            using (var con = new SqlConnection(connectionString))
-            using (var cmd = new SqlCommand())
-            {
-                con.Open();
-                cmd.Connection = con;
-                cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
+        //    var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+        //    using (var con = new SqlConnection(connectionString))
+        //    using (var cmd = new SqlCommand())
+        //    {
+        //        con.Open();
+        //        cmd.Connection = con;
+        //        cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                var sql = "SELECT name FROM users WHERE id = @id AND password = @password;";
-                cmd.CommandText = sql;
-                cmd.Parameters.Clear();
-                cmd.Parameters.Add("@id", SqlDbType.Char, 7).Value = id;
-                cmd.Parameters.Add("@password", SqlDbType.VarChar, 50).Value = password;
+        //        var sql = "SELECT name FROM users WHERE id = @id AND password = @password;";
+        //        cmd.CommandText = sql;
+        //        cmd.Parameters.Clear();
+        //        cmd.Parameters.Add("@id", SqlDbType.Char, 7).Value = id;
+        //        cmd.Parameters.Add("@password", SqlDbType.VarChar, 50).Value = password;
 
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        return new JObject {
-                            { "name", new JValue(reader["name"].ToString()) }
-                        };
-                    }
-                }
-            }
+        //        using (var reader = cmd.ExecuteReader())
+        //        {
+        //            if (reader.Read())
+        //            {
+        //                return new JObject {
+        //                    { "name", new JValue(reader["name"].ToString()) }
+        //                };
+        //            }
+        //        }
+        //    }
 
-            throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
-        }
+        //    throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
+        //}
 
         // GET: api/User
         [Authorize]
@@ -65,9 +66,18 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = json["id"].ToString();
+                var loginId = json["loginId"].ToString();
                 var password = json["password"].ToString();
                 var name = json["name"].ToString();
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = null;
+                }
+                var email = json["email"].ToString();
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    email = null;
+                }
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -77,12 +87,13 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "INSERT INTO users VALUES (@id,  @password,  @name);";
+                    var sql = "INSERT INTO users VALUES (@login_id, @password, @name, @email);";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
-                    cmd.Parameters.Add("@id", SqlDbType.Char, 7).Value = id;
-                    cmd.Parameters.Add("@password", SqlDbType.VarChar, 50).Value = password;
-                    cmd.Parameters.Add("@name", SqlDbType.NVarChar, 20).Value = name;
+                    cmd.Parameters.Add("@login_id", SqlDbType.Char, 7).Value = loginId;
+                    cmd.Parameters.Add("@password", SqlDbType.VarChar, 100).Value = password;
+                    cmd.Parameters.Add("@name", SqlDbType.NVarChar, 50).Value = (object)name ?? DBNull.Value;
+                    cmd.Parameters.Add("@email", SqlDbType.VarChar, 100).Value = (object)email ?? DBNull.Value;
                     cmd.ExecuteNonQuery();
 
                     cmd.Transaction.Commit();

@@ -59,7 +59,7 @@ namespace AwsDemo
             return Task.FromResult(0);
         }
 
-        private bool IsValid(string id, string password)
+        private bool IsValid(string loginId, string password)
         {
             var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
             using (var con = new SqlConnection(connectionString))
@@ -69,17 +69,17 @@ namespace AwsDemo
                 cmd.Connection = con;
                 cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                var sql = "SELECT name FROM users WHERE id = @id AND password = @password;";
+                var sql = "SELECT name FROM users WHERE login_id = @login_id AND password = @password;";
                 cmd.CommandText = sql;
                 cmd.Parameters.Clear();
-                cmd.Parameters.Add("@id", SqlDbType.Char, 7).Value = id;
+                cmd.Parameters.Add("@login_id", SqlDbType.Char, 7).Value = loginId;
                 cmd.Parameters.Add("@password", SqlDbType.VarChar, 50).Value = password;
 
                 using (var reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        UserId = id;
+                        UserId = loginId;
                         UserName = reader["name"].ToString();
                         return true;
                     }
