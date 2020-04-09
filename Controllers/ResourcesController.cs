@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -71,10 +72,62 @@ namespace AwsDemo.Controllers
         //    return "value";
         //}
 
-        //// POST: api/Resources
-        //public void Post([FromBody]string value)
-        //{
-        //}
+        // POST: api/Resources
+        [Authorize]
+        public IEnumerable<JObject> Post([FromBody]JObject json)
+        {
+            var resouces = new List<JObject>();
+            try
+            {
+                var id = int.Parse(json["view"].ToString());
+                var title = json["view"].ToString();
+                var allDay = bool.Parse(json["allDay"].ToString());
+                var start = DateTime.Parse(json["start"].ToString());
+                var end = DateTime.Parse(json["end"].ToString());
+                var resourceId = int.Parse(json["resourceId"].ToString());
+
+                var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+                using (var con = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand())
+                {
+                    con.Open();
+                    cmd.Connection = con;
+                    cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
+
+                    var sql = "SELECT id, title FROM resources;";
+                    cmd.CommandText = sql;
+                    cmd.Parameters.Clear();
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            resouces.Add(new JObject {
+                                { "id", new JValue(reader.GetInt32(0)) },
+                                { "title", new JValue(reader.GetString(1)) },
+                            });
+                        }
+                    }
+                    //if (view == "month")
+                    //{
+                    //}
+                    //if (view == "week")
+                    //{
+                    //}
+                    //if (view == "day")
+                    //{
+                    //}
+                    //if (view == "agenda")
+                    //{
+                    //}
+                }
+
+                return resouces;
+            }
+            catch
+            {
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
+            }
+        }
 
         //// PUT: api/Resources/5
         //public void Put(int id, [FromBody]string value)
