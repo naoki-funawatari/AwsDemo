@@ -22,7 +22,7 @@ namespace AwsDemo.Controllers
             }
             catch
             {
-                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.BadRequest));
             }
         }
 

@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -16,75 +15,23 @@ namespace AwsDemo.Controllers
         [Authorize]
         public IEnumerable<JObject> Get()
         {
-            var resouces = new List<JObject>();
             try
             {
-                //var newDate = DateTime.Parse(json["newDate"].ToString());
-                //var view = json["view"].ToString();
-                //var action = json["action"].ToString();
-
-                var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
-                using (var con = new SqlConnection(connectionString))
-                using (var cmd = new SqlCommand())
-                {
-                    con.Open();
-                    cmd.Connection = con;
-                    cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
-
-                    var sql = "SELECT id, title FROM resources;";
-                    cmd.CommandText = sql;
-                    cmd.Parameters.Clear();
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            resouces.Add(new JObject {
-                                { "id", new JValue(reader.GetInt32(0)) },
-                                { "title", new JValue(reader.GetString(1)) },
-                            });
-                        }
-                    }
-                    //if (view == "month")
-                    //{
-                    //}
-                    //if (view == "week")
-                    //{
-                    //}
-                    //if (view == "day")
-                    //{
-                    //}
-                    //if (view == "agenda")
-                    //{
-                    //}
-                }
-
-                return resouces;
+                return GetResources();
             }
             catch
             {
-                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.BadRequest));
             }
         }
-
-        //// GET: api/Resources/5
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
 
         // POST: api/Resources
         [Authorize]
         public IEnumerable<JObject> Post([FromBody]JObject json)
         {
-            var resouces = new List<JObject>();
             try
             {
-                var id = int.Parse(json["view"].ToString());
-                var title = json["view"].ToString();
-                var allDay = bool.Parse(json["allDay"].ToString());
-                var start = DateTime.Parse(json["start"].ToString());
-                var end = DateTime.Parse(json["end"].ToString());
-                var resourceId = int.Parse(json["resourceId"].ToString());
+                var title = json["title"].ToString();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -94,49 +41,120 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "SELECT id, title FROM resources;";
+                    var sql = "INSERT INTO resources VALUES (@title);";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            resouces.Add(new JObject {
-                                { "id", new JValue(reader.GetInt32(0)) },
-                                { "title", new JValue(reader.GetString(1)) },
-                            });
-                        }
-                    }
-                    //if (view == "month")
-                    //{
-                    //}
-                    //if (view == "week")
-                    //{
-                    //}
-                    //if (view == "day")
-                    //{
-                    //}
-                    //if (view == "agenda")
-                    //{
-                    //}
+                    cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
+                    cmd.ExecuteNonQuery();
+
+                    cmd.Transaction.Commit();
                 }
 
-                return resouces;
+                return GetResources();
             }
             catch
             {
-                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Unauthorized));
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.BadRequest));
             }
         }
 
-        //// PUT: api/Resources/5
-        //public void Put(int id, [FromBody]string value)
-        //{
-        //}
+        // PUT: api/Resources
+        public IEnumerable<JObject> Put([FromBody]JObject json)
+        {
+            try
+            {
+                var id = int.Parse(json["id"].ToString());
+                var title = json["title"].ToString();
 
-        //// DELETE: api/Resources/5
-        //public void Delete(int id)
-        //{
-        //}
+                var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+                using (var con = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand())
+                {
+                    con.Open();
+                    cmd.Connection = con;
+                    cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
+
+                    var sql =
+                        " UPDATE resources" +
+                        " SET    title       = @title" +
+                        " WHERE  id          = @id;";
+                    cmd.CommandText = sql;
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    cmd.ExecuteNonQuery();
+
+                    cmd.Transaction.Commit();
+                }
+
+                return GetResources();
+            }
+            catch
+            {
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.BadRequest));
+            }
+        }
+
+        // DELETE: api/Resources
+        public IEnumerable<JObject> Delete([FromBody]JObject json)
+        {
+            try
+            {
+                var id = int.Parse(json["id"].ToString());
+
+                var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+                using (var con = new SqlConnection(connectionString))
+                using (var cmd = new SqlCommand())
+                {
+                    con.Open();
+                    cmd.Connection = con;
+                    cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
+
+                    var sql = "DELETE resources WHERE id = @id;";
+                    cmd.CommandText = sql;
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    cmd.ExecuteNonQuery();
+
+                    cmd.Transaction.Commit();
+                }
+
+                return GetResources();
+            }
+            catch
+            {
+                throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.BadRequest));
+            }
+        }
+
+        /// <summary>
+        /// リソースの一覧を取得します。
+        /// </summary>
+        /// <returns>リソースの一覧。</returns>
+        private IEnumerable<JObject> GetResources()
+        {
+            var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
+            using (var con = new SqlConnection(connectionString))
+            using (var cmd = new SqlCommand())
+            {
+                con.Open();
+                cmd.Connection = con;
+                cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
+
+                var sql = "SELECT id, title FROM resources;";
+                cmd.CommandText = sql;
+                cmd.Parameters.Clear();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        yield return new JObject {
+                            { "id", new JValue(reader.GetInt32(0)) },
+                            { "title", new JValue(reader.GetString(1)) },
+                        };
+                    }
+                }
+            }
+        }
     }
 }
