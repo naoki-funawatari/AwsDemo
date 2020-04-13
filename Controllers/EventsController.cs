@@ -36,7 +36,7 @@ namespace AwsDemo.Controllers
                 var allDay = bool.Parse(json["allDay"].ToString());
                 var start = DateTime.Parse(json["start"].ToString()).ToLocalTime();
                 var end = DateTime.Parse(json["end"].ToString()).ToLocalTime();
-                var resourceId = int.Parse(json["resourceId"].ToString());
+                var resourceIds = json["resourceIds"];
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -46,15 +46,22 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "INSERT INTO events VALUES (@title, @all_day, @start, @end, @resource_id);";
-                    cmd.CommandText = sql;
+                    cmd.CommandText = "INSERT INTO events VALUES (@title, @all_day, @start, @end);";
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 50).Value = title;
                     cmd.Parameters.Add("@all_day", SqlDbType.Bit).Value = allDay;
                     cmd.Parameters.Add("@start", SqlDbType.DateTime).Value = start;
                     cmd.Parameters.Add("@end", SqlDbType.DateTime).Value = end;
-                    cmd.Parameters.Add("@resource_id", SqlDbType.Int).Value = resourceId;
                     cmd.ExecuteNonQuery();
+
+                    // 新規に、イベントに対してリソースを登録する
+                    cmd.CommandText = "INSERT INTO event_resources VALUES((SELECT IDENT_CURRENT('events')), @resource_id)";
+                    foreach (var resourceId in resourceIds)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.Add("@resource_id", SqlDbType.Int).Value = resourceId;
+                        cmd.ExecuteNonQuery();
+                    }
 
                     cmd.Transaction.Commit();
                 }
@@ -78,7 +85,7 @@ namespace AwsDemo.Controllers
                 var allDay = bool.Parse(json["allDay"].ToString());
                 var start = DateTime.Parse(json["start"].ToString()).ToLocalTime();
                 var end = DateTime.Parse(json["end"].ToString()).ToLocalTime();
-                var resourceId = int.Parse(json["resourceId"].ToString());
+                var resourceIds = new List<int>(json["resourceIds"].Values<int>());
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -88,27 +95,39 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql =
+                    cmd.CommandText =
                         " UPDATE events" +
                         " SET    title       = @title" +
                         "      , all_day     = @all_day" +
                         "      , [start]     = @start" +
                         "      , [end]       = @end" +
-                        "      , resource_id = @resource_id" +
                         " WHERE  id          = @id;";
-                    cmd.CommandText = sql;
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 50).Value = title;
                     cmd.Parameters.Add("@all_day", SqlDbType.Bit).Value = allDay;
                     cmd.Parameters.Add("@start", SqlDbType.DateTime).Value = start;
                     cmd.Parameters.Add("@end", SqlDbType.DateTime).Value = end;
-                    cmd.Parameters.Add("@resource_id", SqlDbType.Int).Value = resourceId;
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
+                    // 一度、イベントに紐づくリソースを全削除する。
+                    cmd.CommandText = "DELETE event_resources WHERE id = @id;";
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    cmd.ExecuteNonQuery();
+
+                    // 新規に、イベントに対してリソースを登録しなおす
+                    cmd.CommandText = "INSERT INTO event_resources VALUES(@event_id, @resource_id)";
+                    foreach (var resourceId in resourceIds)
+                    {
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.Add("@event_id", SqlDbType.Int).Value = id;
+                        cmd.Parameters.Add("@resource_id", SqlDbType.Int).Value = resourceId;
+                        cmd.ExecuteNonQuery();
+                    }
+
                     cmd.Transaction.Commit();
                 }
-
                 return GetEvents();
             }
             catch
@@ -133,10 +152,15 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "DELETE events WHERE id = @id;";
-                    cmd.CommandText = sql;
+                    cmd.CommandText = "DELETE events WHERE id = @id;";
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    cmd.ExecuteNonQuery();
+
+                    // 一度、イベントに紐づくリソースを全削除する。
+                    cmd.CommandText = "DELETE event_resources WHERE event_id = @event_id;";
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.Add("@event_id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
                     cmd.Transaction.Commit();
@@ -164,8 +188,14 @@ namespace AwsDemo.Controllers
                 cmd.Connection = con;
                 cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                var sql = "SELECT id, title, all_day, [start], [end], resource_id FROM events;";
-                cmd.CommandText = sql;
+                cmd.CommandText = " SELECT [events].id" +
+                                  "      , [events].title" +
+                                  "      , [events].all_day" +
+                                  "      , [events].[start]" +
+                                  "      , [events].[end]" +
+                                  " 	 , event_resources.resource_id" +
+                                  " FROM [events] INNER JOIN event_resources" +
+                                  "   ON [events].id = event_resources.event_id;";
                 cmd.Parameters.Clear();
                 using (var reader = cmd.ExecuteReader())
                 {
