@@ -31,7 +31,7 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var title = json["title"].ToString();
+                var title = json["title"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -63,8 +63,8 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = int.Parse(json["id"].ToString());
-                var title = json["title"].ToString();
+                var id = json["id"].Value<int>();
+                var title = json["title"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -100,7 +100,7 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = int.Parse(json["id"].ToString());
+                var id = json["id"].Value<int>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))

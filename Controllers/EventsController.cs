@@ -32,11 +32,11 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var title = json["title"].ToString();
-                var allDay = bool.Parse(json["allDay"].ToString());
-                var start = DateTime.Parse(json["start"].ToString()).ToLocalTime();
-                var end = DateTime.Parse(json["end"].ToString()).ToLocalTime();
-                var resourceIds = json["resourceIds"];
+                var title = json["title"].Value<string>();
+                var allDay = json["allDay"].Value<bool>();
+                var start = json["start"].Value<DateTime>().ToLocalTime();
+                var end = json["end"].Value<DateTime>().ToLocalTime();
+                var resourceIds = new List<int>(json["resourceIds"].Values<int>());
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -80,11 +80,11 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = int.Parse(json["id"].ToString());
-                var title = json["title"].ToString();
-                var allDay = bool.Parse(json["allDay"].ToString());
-                var start = DateTime.Parse(json["start"].ToString()).ToLocalTime();
-                var end = DateTime.Parse(json["end"].ToString()).ToLocalTime();
+                var id = json["id"].Value<int>();
+                var title = json["title"].Value<string>();
+                var allDay = json["allDay"].Value<bool>();
+                var start = json["start"].Value<DateTime>().ToLocalTime();
+                var end = json["end"].Value<DateTime>().ToLocalTime();
                 var resourceIds = new List<int>(json["resourceIds"].Values<int>());
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
@@ -142,7 +142,7 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = int.Parse(json["id"].ToString());
+                var id = json["id"].Value<int>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))

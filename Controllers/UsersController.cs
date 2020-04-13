@@ -18,14 +18,14 @@ namespace AwsDemo.Controllers
         {
             try
             {
-                var id = json["id"].ToString();
-                var password = json["password"].ToString();
-                var name = json["name"].ToString();
+                var id = json["id"].Value<string>();
+                var password = json["password"].Value<string>();
+                var name = json["name"].Value<string>();
                 if (string.IsNullOrWhiteSpace(name))
                 {
                     name = null;
                 }
-                var email = json["email"].ToString();
+                var email = json["email"].Value<string>();
                 if (string.IsNullOrWhiteSpace(email))
                 {
                     email = null;
