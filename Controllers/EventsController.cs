@@ -111,9 +111,9 @@ namespace AwsDemo.Controllers
                     cmd.ExecuteNonQuery();
 
                     // 一度、イベントに紐づくリソースを全削除する。
-                    cmd.CommandText = "DELETE event_resources WHERE id = @id;";
+                    cmd.CommandText = "DELETE event_resources WHERE event_id = @event_id;";
                     cmd.Parameters.Clear();
-                    cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@event_id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
                     // 新規に、イベントに対してリソースを登録しなおす
