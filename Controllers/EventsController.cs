@@ -36,7 +36,7 @@ namespace AwsDemo.Controllers
                 var allDay = json["allDay"].Value<bool>();
                 var start = json["start"].Value<DateTime>().ToLocalTime();
                 var end = json["end"].Value<DateTime>().ToLocalTime();
-                var resourceIds = new List<int>(json["resourceIds"].Values<int>());
+                var resourceIds = json["resourceIds"].Values<int>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -85,7 +85,7 @@ namespace AwsDemo.Controllers
                 var allDay = json["allDay"].Value<bool>();
                 var start = json["start"].Value<DateTime>().ToLocalTime();
                 var end = json["end"].Value<DateTime>().ToLocalTime();
-                var resourceIds = new List<int>(json["resourceIds"].Values<int>());
+                var resourceIds = json["resourceIds"].Values<int>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
