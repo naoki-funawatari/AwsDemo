@@ -189,15 +189,65 @@ namespace AwsDemo.Controllers
                 cmd.Connection = con;
                 cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                cmd.CommandText = " SELECT [events].id" +
-                                  "      , [events].title" +
-                                  "      , [events].all_day" +
-                                  "      , [events].[start]" +
-                                  "      , [events].[end]" +
-                                  " 	 , event_resources.resource_id" +
-                                  " FROM [events] INNER JOIN event_resources" +
-                                  "   ON [events].id = event_resources.event_id;";
                 cmd.Parameters.Clear();
+                cmd.CommandText = "";
+                cmd.CommandText += " SELECT [events].id";
+                cmd.CommandText += "      , [events].title";
+                cmd.CommandText += "      , [events].all_day";
+                cmd.CommandText += "      , [events].[start]";
+                cmd.CommandText += "      , [events].[end]";
+                cmd.CommandText += " 	 , event_resources.resource_id";
+                cmd.CommandText += " FROM [events] INNER JOIN event_resources";
+                cmd.CommandText += "   ON [events].id = event_resources.event_id";
+                if (view == "day")
+                {
+                    cmd.CommandText += " WHERE events.id IN (";
+                    cmd.CommandText += "     SELECT [id] FROM (";
+                    cmd.CommandText += "         SELECT id, CAST([start] AS date)[d] FROM events UNION";
+                    cmd.CommandText += "         SELECT id, CAST([end]   AS date)[d] FROM events";
+                    cmd.CommandText += "     ) COND WHERE d = @date";
+                    cmd.CommandText += " )";
+                    cmd.Parameters.Add("@date", SqlDbType.Date).Value = range[0];
+                }
+                else if (view == "week")
+                {
+                    cmd.CommandText += " WHERE events.id IN (";
+                    cmd.CommandText += "     SELECT [id] FROM (";
+                    cmd.CommandText += "         SELECT id, CAST([start] AS date)[d] FROM events UNION";
+                    cmd.CommandText += "         SELECT id, CAST([end]   AS date)[d] FROM events";
+                    cmd.CommandText += "     ) COND WHERE d IN (@date0, @date1, @date2, @date3, @date4, @date5, @date6)";
+                    cmd.CommandText += " )";
+                    cmd.Parameters.Add("@date0", SqlDbType.Date).Value = range[0];
+                    cmd.Parameters.Add("@date1", SqlDbType.Date).Value = range[1];
+                    cmd.Parameters.Add("@date2", SqlDbType.Date).Value = range[2];
+                    cmd.Parameters.Add("@date3", SqlDbType.Date).Value = range[3];
+                    cmd.Parameters.Add("@date4", SqlDbType.Date).Value = range[4];
+                    cmd.Parameters.Add("@date5", SqlDbType.Date).Value = range[5];
+                    cmd.Parameters.Add("@date6", SqlDbType.Date).Value = range[6];
+                }
+                else if (view == "month")
+                {
+                    cmd.CommandText += " WHERE events.id IN (";
+                    cmd.CommandText += "     SELECT [id] FROM (";
+                    cmd.CommandText += "         SELECT id, [start] [d] FROM events UNION";
+                    cmd.CommandText += "         SELECT id, [end]   [d] FROM events";
+                    cmd.CommandText += "     ) COND WHERE d BETWEEN @date0 AND @date1";
+                    cmd.CommandText += " )";
+                    cmd.Parameters.Add("@date0", SqlDbType.DateTime).Value = range[0];
+                    cmd.Parameters.Add("@date1", SqlDbType.DateTime).Value = range[1];
+                }
+                else if (view == "agenda")
+                {
+                    cmd.CommandText += " WHERE events.id IN (";
+                    cmd.CommandText += "     SELECT [id] FROM (";
+                    cmd.CommandText += "         SELECT id, [start] [d] FROM events UNION";
+                    cmd.CommandText += "         SELECT id, [end]   [d] FROM events";
+                    cmd.CommandText += "     ) COND WHERE d BETWEEN @date0 AND @date1";
+                    cmd.CommandText += " )";
+                    cmd.Parameters.Add("@date0", SqlDbType.DateTime).Value = range[0];
+                    cmd.Parameters.Add("@date1", SqlDbType.DateTime).Value = range[1];
+                }
+                cmd.CommandText += " ;";
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
