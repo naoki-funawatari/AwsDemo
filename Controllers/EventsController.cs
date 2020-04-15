@@ -196,7 +196,7 @@ namespace AwsDemo.Controllers
                 cmd.CommandText += "      , [events].all_day";
                 cmd.CommandText += "      , [events].[start]";
                 cmd.CommandText += "      , [events].[end]";
-                cmd.CommandText += " 	 , event_resources.resource_id";
+                cmd.CommandText += " 	  , event_resources.resource_id";
                 cmd.CommandText += " FROM [events] INNER JOIN event_resources";
                 cmd.CommandText += "   ON [events].id = event_resources.event_id";
                 if (view == "day")
