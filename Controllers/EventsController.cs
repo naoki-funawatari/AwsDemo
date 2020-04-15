@@ -14,11 +14,11 @@ namespace AwsDemo.Controllers
     {
         // GET: api/Events
         [Authorize]
-        public IEnumerable<JObject> Get()
+        public IEnumerable<JObject> Get([FromUri]string view, [FromUri]DateTime[] range, [FromBody]JObject json)
         {
             try
             {
-                return GetEvents();
+                return GetEvents(view, range);
             }
             catch
             {
@@ -28,7 +28,7 @@ namespace AwsDemo.Controllers
 
         // POST: api/Events
         [Authorize]
-        public IEnumerable<JObject> Post([FromBody]JObject json)
+        public IEnumerable<JObject> Post([FromUri]string view, [FromUri]DateTime[] range, [FromBody]JObject json)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace AwsDemo.Controllers
                     cmd.Transaction.Commit();
                 }
 
-                return GetEvents();
+                return GetEvents(view, range);
             }
             catch
             {
@@ -76,7 +76,7 @@ namespace AwsDemo.Controllers
 
         // PUT: api/Events
         [Authorize]
-        public IEnumerable<JObject> Put([FromBody]JObject json)
+        public IEnumerable<JObject> Put([FromUri]string view, [FromUri]DateTime[] range, [FromBody]JObject json)
         {
             try
             {
@@ -128,7 +128,8 @@ namespace AwsDemo.Controllers
 
                     cmd.Transaction.Commit();
                 }
-                return GetEvents();
+
+                return GetEvents(view, range);
             }
             catch
             {
@@ -138,7 +139,7 @@ namespace AwsDemo.Controllers
 
         // DELETE: api/Events
         [Authorize]
-        public IEnumerable<JObject> Delete([FromBody]JObject json)
+        public IEnumerable<JObject> Delete([FromUri]string view, [FromUri]DateTime[] range, [FromBody]JObject json)
         {
             try
             {
@@ -166,7 +167,7 @@ namespace AwsDemo.Controllers
                     cmd.Transaction.Commit();
                 }
 
-                return GetEvents();
+                return GetEvents(view, range);
             }
             catch
             {
@@ -178,7 +179,7 @@ namespace AwsDemo.Controllers
         /// イベントの一覧を取得します。
         /// </summary>
         /// <returns>イベントの一覧。</returns>
-        private IEnumerable<JObject> GetEvents()
+        private IEnumerable<JObject> GetEvents(string view, DateTime[] range)
         {
             var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
             using (var con = new SqlConnection(connectionString))
