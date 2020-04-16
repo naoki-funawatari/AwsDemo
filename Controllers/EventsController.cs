@@ -196,6 +196,7 @@ namespace AwsDemo.Controllers
                 cmd.CommandText += "      , [events].all_day";
                 cmd.CommandText += "      , [events].[start]";
                 cmd.CommandText += "      , [events].[end]";
+                cmd.CommandText += "      , [events].color";
                 cmd.CommandText += " 	  , event_resources.resource_id";
                 cmd.CommandText += " FROM [events] INNER JOIN event_resources";
                 cmd.CommandText += "   ON [events].id = event_resources.event_id";
@@ -258,7 +259,8 @@ namespace AwsDemo.Controllers
                             { "allDay", new JValue(reader.GetBoolean(2)) },
                             { "start", new JValue(reader.GetDateTime(3)) },
                             { "end", new JValue(reader.GetDateTime(4)) },
-                            { "resourceId", new JValue(reader.GetInt32(5)) },
+                            { "color", new JValue(reader.GetString(5)) },
+                            { "resourceId", new JValue(reader.GetInt32(6)) },
                         };
                     }
                 }
