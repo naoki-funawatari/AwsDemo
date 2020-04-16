@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -32,6 +33,7 @@ namespace AwsDemo.Controllers
             try
             {
                 var title = json["title"].Value<string>();
+                var remarks = json["remarks"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -41,10 +43,12 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "INSERT INTO resources VALUES (@title);";
+                    var sql = "INSERT INTO resources VALUES (@title, @resource_type_id, @remarks, null);";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
+                    cmd.Parameters.Add("@resource_type_id", SqlDbType.Int).Value = 1;
+                    cmd.Parameters.Add("@remarks", SqlDbType.NVarChar, 50).Value = remarks;
                     cmd.ExecuteNonQuery();
 
                     cmd.Transaction.Commit();
@@ -65,6 +69,7 @@ namespace AwsDemo.Controllers
             {
                 var id = json["id"].Value<int>();
                 var title = json["title"].Value<string>();
+                var remarks = json["remarks"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -76,11 +81,13 @@ namespace AwsDemo.Controllers
 
                     var sql =
                         " UPDATE resources" +
-                        " SET    title       = @title" +
-                        " WHERE  id          = @id;";
+                        " SET    title   = @title" +
+                        "      , remarks = @remarks" +
+                        " WHERE  id      = @id;";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
+                    cmd.Parameters.Add("@remarks", SqlDbType.NVarChar, 50).Value = remarks;
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
@@ -110,9 +117,13 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    var sql = "DELETE resources WHERE id = @id;";
+                    var sql =
+                        " UPDATE resources" +
+                        " SET    deleted = @deleted" +
+                        " WHERE  id      = @id;";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
+                    cmd.Parameters.Add("@deleted", SqlDbType.DateTime).Value = DateTime.Now;
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
@@ -141,7 +152,14 @@ namespace AwsDemo.Controllers
                 cmd.Connection = con;
                 cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                var sql = "SELECT id, title FROM resources;";
+                var sql =
+                    " SELECT resources.id," +
+                    "        resources.title," +
+                    "        resource_type.title resource_type_title," +
+                    "        resources.remarks" +
+                    " FROM resources INNER JOIN resource_type" +
+                    "   ON resources.resource_type_id = resource_type.id" +
+                    " WHERE resources.deleted IS null;";
                 cmd.CommandText = sql;
                 cmd.Parameters.Clear();
                 using (var reader = cmd.ExecuteReader())
@@ -151,6 +169,8 @@ namespace AwsDemo.Controllers
                         yield return new JObject {
                             { "id", new JValue(reader.GetInt32(0)) },
                             { "title", new JValue(reader.GetString(1)) },
+                            { "resource_type_title", new JValue(reader.GetString(2)) },
+                            { "remarks", new JValue(reader.IsDBNull(3) ? null : reader.GetString(3) ) },
                         };
                     }
                 }
