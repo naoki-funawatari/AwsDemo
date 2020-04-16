@@ -37,6 +37,7 @@ namespace AwsDemo.Controllers
                 var start = json["start"].Value<DateTime>().ToLocalTime();
                 var end = json["end"].Value<DateTime>().ToLocalTime();
                 var resourceIds = json["resourceIds"].Values<int>();
+                var color = json["color"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -46,12 +47,13 @@ namespace AwsDemo.Controllers
                     cmd.Connection = con;
                     cmd.Transaction = con.BeginTransaction(IsolationLevel.ReadCommitted);
 
-                    cmd.CommandText = "INSERT INTO events VALUES (@title, @all_day, @start, @end);";
+                    cmd.CommandText = "INSERT INTO events VALUES (@title, @all_day, @start, @end, @color);";
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 50).Value = title;
                     cmd.Parameters.Add("@all_day", SqlDbType.Bit).Value = allDay;
                     cmd.Parameters.Add("@start", SqlDbType.DateTime).Value = start;
                     cmd.Parameters.Add("@end", SqlDbType.DateTime).Value = end;
+                    cmd.Parameters.Add("@color", SqlDbType.Char, 7).Value = color;
                     cmd.ExecuteNonQuery();
 
                     // 新規に、イベントに対してリソースを登録する
@@ -86,6 +88,7 @@ namespace AwsDemo.Controllers
                 var start = json["start"].Value<DateTime>().ToLocalTime();
                 var end = json["end"].Value<DateTime>().ToLocalTime();
                 var resourceIds = json["resourceIds"].Values<int>();
+                var color = json["color"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
                 using (var con = new SqlConnection(connectionString))
@@ -101,12 +104,14 @@ namespace AwsDemo.Controllers
                         "      , all_day     = @all_day" +
                         "      , [start]     = @start" +
                         "      , [end]       = @end" +
+                        "      , color       = @color" +
                         " WHERE  id          = @id;";
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 50).Value = title;
                     cmd.Parameters.Add("@all_day", SqlDbType.Bit).Value = allDay;
                     cmd.Parameters.Add("@start", SqlDbType.DateTime).Value = start;
                     cmd.Parameters.Add("@end", SqlDbType.DateTime).Value = end;
+                    cmd.Parameters.Add("@color", SqlDbType.Char, 7).Value = color;
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
 
