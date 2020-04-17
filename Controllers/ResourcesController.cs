@@ -33,6 +33,7 @@ namespace AwsDemo.Controllers
             try
             {
                 var title = json["title"].Value<string>();
+                var resource_type_id = json["resource_type_id"].Value<int>();
                 var remarks = json["remarks"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
@@ -47,7 +48,7 @@ namespace AwsDemo.Controllers
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
-                    cmd.Parameters.Add("@resource_type_id", SqlDbType.Int).Value = 1;
+                    cmd.Parameters.Add("@resource_type_id", SqlDbType.Int).Value = resource_type_id;
                     cmd.Parameters.Add("@remarks", SqlDbType.NVarChar, 50).Value = remarks;
                     cmd.ExecuteNonQuery();
 
@@ -69,6 +70,7 @@ namespace AwsDemo.Controllers
             {
                 var id = json["id"].Value<int>();
                 var title = json["title"].Value<string>();
+                var resource_type_id = json["resource_type_id"].Value<int>();
                 var remarks = json["remarks"].Value<string>();
 
                 var connectionString = ConfigurationManager.ConnectionStrings["ConnectionString"].ToString();
@@ -81,12 +83,14 @@ namespace AwsDemo.Controllers
 
                     var sql =
                         " UPDATE resources" +
-                        " SET    title   = @title" +
-                        "      , remarks = @remarks" +
-                        " WHERE  id      = @id;";
+                        " SET    title            = @title" +
+                        "      , resource_type_id = @resource_type_id" +
+                        "      , remarks          = @remarks" +
+                        " WHERE  id               = @id;";
                     cmd.CommandText = sql;
                     cmd.Parameters.Clear();
                     cmd.Parameters.Add("@title", SqlDbType.NVarChar, 20).Value = title;
+                    cmd.Parameters.Add("@resource_type_id", SqlDbType.Int).Value = resource_type_id;
                     cmd.Parameters.Add("@remarks", SqlDbType.NVarChar, 50).Value = remarks;
                     cmd.Parameters.Add("@id", SqlDbType.Int).Value = id;
                     cmd.ExecuteNonQuery();
@@ -156,10 +160,8 @@ namespace AwsDemo.Controllers
                     " SELECT resources.id," +
                     "        resources.title," +
                     "        resources.resource_type_id," +
-                    "        resource_type.title resource_type_title," +
                     "        resources.remarks" +
-                    " FROM resources INNER JOIN resource_type" +
-                    "   ON resources.resource_type_id = resource_type.id" +
+                    " FROM resources" +
                     " WHERE resources.deleted IS null;";
                 cmd.CommandText = sql;
                 cmd.Parameters.Clear();
@@ -171,8 +173,7 @@ namespace AwsDemo.Controllers
                             { "id", new JValue(reader.GetInt32(0)) },
                             { "title", new JValue(reader.GetString(1)) },
                             { "resource_type_id", new JValue(reader.GetInt32(2)) },
-                            { "resource_type_title", new JValue(reader.GetString(3)) },
-                            { "remarks", new JValue(reader.IsDBNull(4) ? string.Empty : reader.GetString(4) ) },
+                            { "remarks", new JValue(reader.IsDBNull(3) ? string.Empty : reader.GetString(3) ) },
                         };
                     }
                 }
