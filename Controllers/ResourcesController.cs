@@ -155,6 +155,7 @@ namespace AwsDemo.Controllers
                 var sql =
                     " SELECT resources.id," +
                     "        resources.title," +
+                    "        resources.resource_type_id," +
                     "        resource_type.title resource_type_title," +
                     "        resources.remarks" +
                     " FROM resources INNER JOIN resource_type" +
@@ -169,8 +170,9 @@ namespace AwsDemo.Controllers
                         yield return new JObject {
                             { "id", new JValue(reader.GetInt32(0)) },
                             { "title", new JValue(reader.GetString(1)) },
-                            { "resource_type_title", new JValue(reader.GetString(2)) },
-                            { "remarks", new JValue(reader.IsDBNull(3) ? null : reader.GetString(3) ) },
+                            { "resource_type_id", new JValue(reader.GetInt32(2)) },
+                            { "resource_type_title", new JValue(reader.GetString(3)) },
+                            { "remarks", new JValue(reader.IsDBNull(4) ? string.Empty : reader.GetString(4) ) },
                         };
                     }
                 }
